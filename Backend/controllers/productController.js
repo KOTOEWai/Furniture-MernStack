@@ -1,63 +1,52 @@
 
-const { Msg ,ErrorMsg } = require("../utils/core");
+const { Msg } = require("../utils/core");
 const productModel = require("../models/productModel");
+const asyncHandler = require("../utils/asyncHandler");
+const CustomError = require("../utils/CustomError");
 
-const getProducts = async (req, res) => {
-  try {
-      const products = await productModel.find(req.body);
-      if (!products) {
-         ErrorMsg(res,"Products not found");
-      }
-      if (products.length === 0) {
-        ErrorMsg(res,"No products found");
-      } else {
-        Msg(res,"Products fetched successfully",products)
-      }
-    } catch (err) {
-      ErrorMsg(res,"Error fetching products",err)
-  } }
-
-
-
-
-const postProduct = async (req, res , next) => {
-  console.log(req.body);  
-  
-  try {
-    const {
-      name,
-      image,
-      description,
-      dimensions,
-      category,
-      price,
-      discount_price,
-      stock,
-      tags,
-    } = req.body;
-
-    if (!name || !image || !description || !dimensions || !category || !price || !stock) {
-      throw new Error("All fields are required");
-    }
-    const productExists = await productModel.findOne({ name });
-    if (productExists) {
-    next (new Error("Product already exists"));
-    }
-    const newProduct = await productModel.create({
-      name,
-      image,
-      description,
-      dimensions: JSON.parse(dimensions),
-      category,
-      price,
-      discount_price,
-      stock,
-      tags: JSON.parse(tags),
-    });
-
-   Msg(res,"Product created successfully",newProduct)
-  } catch (error) {
-   next(new Error(error.message));
+const getProducts = asyncHandler(async (req, res) => {
+  const products = await productModel.find(req.body);
+  if (!products || products.length === 0) {
+    throw new CustomError("No products found", 404);
   }
-};
-module.exports = { getProducts , postProduct};
+  Msg(res, "Products fetched successfully", products);
+});
+
+const postProduct = asyncHandler(async (req, res) => {
+  const {
+    name,
+    image,
+    description,
+    dimensions,
+    category,
+    price,
+    discount_price,
+    stock,
+    tags,
+  } = req.body;
+
+  if (!name || !image || !description || !dimensions || !category || !price || !stock) {
+    throw new CustomError("All fields are required", 400);
+  }
+
+  const productExists = await productModel.findOne({ name });
+  if (productExists) {
+    throw new CustomError("Product already exists", 400);
+  }
+
+  const newProduct = await productModel.create({
+    name,
+    image,
+    description,
+    dimensions: typeof dimensions === 'string' ? JSON.parse(dimensions) : dimensions,
+    category,
+    price,
+    discount_price,
+    stock,
+    tags: typeof tags === 'string' ? JSON.parse(tags) : tags,
+  });
+
+  Msg(res, "Product created successfully", newProduct);
+});
+
+module.exports = { getProducts, postProduct };

@@ -2,7 +2,9 @@ const mongodb = require("mongoose");
 
 const mongoConect = async () => {
     try {
-        await mongodb.connect(process.env.Mongo_api);
+        await mongodb.connect(process.env.Mongo_api,{
+            family: 4
+        });
 
     } catch (error) {
         console.error("Database connection error:", error);

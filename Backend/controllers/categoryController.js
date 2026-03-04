@@ -1,75 +1,51 @@
 const Category = require("../models/categoryModel");
 const { Msg } = require("../utils/core");
+const asyncHandler = require("../utils/asyncHandler");
+const CustomError = require("../utils/CustomError");
 
-const getAllCategories = async (req, res) => {
-    try {
-        const categories = await Category.find();
-        if (!categories) {
-             Msg(res,"Categories not found",categories)
-        }
-     Msg( res,"Categories fetched successfully",categories)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching categories query" });
+const getAllCategories = asyncHandler(async (req, res) => {
+    const categories = await Category.find();
+    Msg(res, "Categories fetched successfully", categories);
+});
+
+const getCategoryById = asyncHandler(async (req, res) => {
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+        throw new CustomError("Category not found", 404);
     }
-};
+    Msg(res, "Category fetched successfully", category);
+});
 
-const getCategoryById = async (req, res) => {
-    try {
-        const category = await Category.findById(req.params.id);
-        if (!category) {
-            return res.status(404).json({ error: "Category not found" });
-        }
-       Msg(res,"Category fetched successfully",category)
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching category" });
-    }
-};
-
-const postCategory = async (req, res ) => {
-    try {
-        const { name, description , img } = req.body;
-        if (!name || typeof name !== 'string' || name.trim() === '') {
-            return res.status(400).json({ error: "Category name is required" });
-        }
-        const existingCategory = await Category.findOne({ name });
-        if (existingCategory) {
-            return res.status(400).json({ error: "Category with this name already exists" });
-        }
-        const newCategory = { name: name.trim(), description, img };
-        const category = await Category.create(newCategory);
-        Msg(res, "Category created successfully", category);
-    } catch (error) {
-        console.error("Error creating category:", error);
-        res.status(500).json({ error: "Error creating category", details: error.message });
+const postCategory = asyncHandler(async (req, res) => {
+    const { name, description, img } = req.body;
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+        throw new CustomError("Category name is required", 400);
     }
 
-};
-
-const dropCategory = async (req, res)=>{
-    try {
-        const category = await Category.findByIdAndDelete(req.params.id);
-        if (!category) {
-            return res.status(404).json({ error: "Category not found" });
-        }
-        Msg(res,"Category deleted successfully",category)
-    } catch (error) {
-        res.status(500).json({ error: "Error deleting category" });
+    const existingCategory = await Category.findOne({ name: name.trim() });
+    if (existingCategory) {
+        throw new CustomError("Category with this name already exists", 400);
     }
-}
 
-const patchCategory = async ( req,res)=>{
-    try{
-        const { name, description , parentCategory } = req.body;
-     const updateCategory = { name, description , parentCategory };
-        const category = await Category.findByIdAndUpdate(req.params.id, updateCategory, { new: true });
-        if (!category) {
-            return res.status(404).json({ error: "Category not found" });
-        }
-        Msg(res,"Category updated successfully",category)
-    }catch(error){
-        res.status(500).json({ error: "Error updating category" });
+    const category = await Category.create({ name: name.trim(), description, img });
+    Msg(res, "Category created successfully", category);
+});
+
+const dropCategory = asyncHandler(async (req, res) => {
+    const category = await Category.findByIdAndDelete(req.params.id);
+    if (!category) {
+        throw new CustomError("Category not found", 404);
     }
-}
+    Msg(res, "Category deleted successfully", category);
+});
 
+const patchCategory = asyncHandler(async (req, res) => {
+    const { name, description, parentCategory } = req.body;
+    const category = await Category.findByIdAndUpdate(req.params.id, { name, description, parentCategory }, { new: true });
+    if (!category) {
+        throw new CustomError("Category not found", 404);
+    }
+    Msg(res, "Category updated successfully", category);
+});
 
-module.exports = { getAllCategories , postCategory, getCategoryById ,dropCategory ,patchCategory };
+module.exports = { getAllCategories, postCategory, getCategoryById, dropCategory, patchCategory };

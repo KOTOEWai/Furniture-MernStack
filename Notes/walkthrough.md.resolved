@@ -1,0 +1,53 @@
+# Project Improvements Walkthrough
+
+I've implemented significant improvements to both the frontend and backend of your project, focusing on user experience, code quality, and scalability.
+
+## Frontend Enhancements
+
+### [NEW] [About Page](file:///d:/project/Funiture/Frontend/src/Pages/About.tsx)
+The About page has been transformed into a premium, interactive experience.
+- **Modern Design**: Used a rich, dark-themed hero section with high-quality imagery.
+- **Animations**: Integrated `framer-motion` for smooth reveal animations as you scroll.
+- **Content**: Added professionally written sections for "Our Story", "Philosophy", and "Stats".
+
+### [NEW] [Contact Page](file:///d:/project/Funiture/Frontend/src/Pages/Contact.tsx)
+Created a brand-new, functional Contact page.
+- **Clean Layout**: A split layout showing contact information and a sleek request form.
+- **Interactive Form**: Designed with focus states and hover effects for a premium feel.
+- **Responsive**: Fully responsive design that works perfectly on mobile and desktop.
+
+### [MODIFY] [Routing & Navigation](file:///d:/project/Funiture/Frontend/src/App.tsx)
+- Registered the new Contact route.
+- Updated the **Navbar** to include links to the new pages.
+
+---
+
+## Backend Infrastructure Improvements
+
+### Centralized Error Handling
+Moved away from repetitive `try-catch` blocks to a cleaner, more robust system.
+- **[asyncHandler.js](file:///d:/project/Funiture/Backend/utils/asyncHandler.js)**: A utility to wrap async routes and catch errors automatically.
+- **[CustomError.js](file:///d:/project/Funiture/Backend/utils/CustomError.js)**: A dedicated error class for managing HTTP status codes.
+- **[errorMiddleware.js](file:///d:/project/Funiture/Backend/middleware/errorMiddleware.js)**: A global middleware that catches all errors and provides consistent JSON responses.
+
+### Scalable Caching Strategy
+Improved the Redis implementation for better multi-user support.
+- **User-Specific Keys**: Cached data now uses `user:${id}` keys instead of a single "User" key, preventing data collisions between different users.
+- **Auth Fallback**: The **Auth middleware** now checks the cache first and falls back to the database if needed, ensuring high performance even if the cache is cleared.
+- **Simplified Helper**: Refactored [redisHelper.js](file:///d:/project/Funiture/Backend/utils/redisHelper.js) to handle data serialization automatically.
+
+---
+
+## How to Verify
+1.  **Frontend**: Navigate to `/about` and `/contact` to see the new designs.
+2.  **Backend**: Errors will now return a consistent JSON format like:
+    ```json
+    {
+      "status": "fail",
+      "message": "User not found"
+    }
+    ```
+3.  **Caching**: When a user logs in, check your Redis instance to see the `user:<id>` key.
+
+> [!TIP]
+> You can now easily add more controllers by simply wrapping them in [asyncHandler](file:///d:/project/Funiture/Backend/utils/asyncHandler.js#1-4) and throwing [CustomError](file:///d:/project/Funiture/Backend/utils/CustomError.js#1-11) whenever something goes wrong!

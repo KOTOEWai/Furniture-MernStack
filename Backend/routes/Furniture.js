@@ -3,6 +3,7 @@ const { getFurnitureData ,getUniqueById } = require("../utils/furnitureService")
 
 const router = express.Router();
 const { verifyToken } = require("../utils/Auth");
+
 router.get("/furniture", async (req, res, next) => {
   try {
     const data = await getFurnitureData();

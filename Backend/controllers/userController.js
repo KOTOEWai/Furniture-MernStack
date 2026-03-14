@@ -1,125 +1,62 @@
 const User = require("../models/userModel");
-const { generateToken, Msg } = require("../utils/core");
-const { setCachUser } = require("../utils/Usercache");
+const {  Msg } = require("../utils/core");
+
 const asyncHandler = require("../utils/asyncHandler");
 const CustomError = require("../utils/CustomError");
+const sendAuthResponse = require("../utils/sendAuthResponse");
 
-const register = asyncHandler(async (req, res) => {
+
+// --- Controllers ---
+
+exports.registerUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
 
-  if (!username || !email || !password) {
-    throw new CustomError('Missing required fields', 400);
-  }
-
-  const userExists = await User.findOne({ email });
-  if (userExists) {
+  // Business check (Validation logic moves to Middleware)
+  if (await User.findOne({ email })) {
     throw new CustomError('User already exists', 400);
   }
 
-  const newuser = await User.create({ username, email, password });
-
-  const token = generateToken(newuser._id);
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: "strict",
-  });
-
-  const user = {
-    id: newuser._id,
-    username: newuser.username,
-    email: newuser.email,
-    role: newuser.role,
-    token
-  };
-
-  // Cache user by ID
-  await setCachUser(`user:${newuser._id}`, user);
-
-  Msg(res, "User created successfully", user);
+  const newUser = await User.create({ username, email, password });
+  await sendAuthResponse(res, newUser, "User created successfully");
 });
 
-const login = asyncHandler(async (req, res) => {
+exports.loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    throw new CustomError('Missing required fields', 400);
-  }
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw new CustomError('User not found', 404);
-  }
-
-  const isMatch = await user.matchPassword(password);
-  if (!isMatch) {
+  const user = await User.findOne({ email }).select('+password'); // Ensure password is included for comparison
+  if (!user || !(await user.matchPassword(password))) {
     throw new CustomError('Invalid credentials', 401);
   }
 
-  const token = generateToken(user._id);
-
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: "strict",
-  });
-
-  const userdetails = {
-    id: user._id,
-    username: user.username,
-    email: user.email,
-    role: user.role,
-    token
-  };
-
-  // Cache user by ID
-  await setCachUser(`user:${user._id}`, userdetails);
-
-  Msg(res, "User logged in successfully", userdetails);
+  await sendAuthResponse(res, user, "User logged in successfully");
 });
 
-const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().select('-password');
+exports.getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find().select('-password').lean(); // .lean() for faster read-only
   Msg(res, "Users fetched successfully", users);
 });
 
-const getByUserId = asyncHandler(async (req, res) => {
+exports.getByUserId = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id).select('-password');
-  if (!user) {
-    throw new CustomError('User not found', 404);
-  }
+  if (!user) throw new CustomError('User not found', 404);
   Msg(res, "User fetched successfully", user);
 });
 
-const updateUser = asyncHandler(async (req, res) => {
-  const { username, role } = req.body;
-  const user = await User.findByIdAndUpdate(req.params.id, { username, role }, { new: true });
-  if (!user) {
-    throw new CustomError('User not found', 404);
-  }
+exports.updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndUpdate(req.params.id, req.body, { 
+    new: true, 
+    runValidators: true 
+  });
+  if (!user) throw new CustomError('User not found', 404);
   Msg(res, "User updated successfully", user);
 });
 
-const dropUser = asyncHandler(async (req, res) => {
+exports.dropUser = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndDelete(req.params.id);
-  if (!user) {
-    throw new CustomError('User not found', 404);
-  }
-  Msg(res, "User deleted successfully", user);
+  if (!user) throw new CustomError('User not found', 404);
+  Msg(res, "User deleted successfully", null);
 });
 
-const getme = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    throw new CustomError('Not authenticated', 401);
-  }
+exports.getme = asyncHandler(async (req, res) => {
   res.status(200).json(req.user);
 });
-
-module.exports = {
-  registerUser: register,
-  loginUser: login,
-  getAllUsers: getUsers,
-  getByUserId,
-  updateUser,
-  dropUser,
-  getme
-};

@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-
 
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 import {
   Form,
@@ -28,13 +25,13 @@ import { PasswordInput } from '@/components/ui/password-input'
 
 import { loginFormSchema } from '@/lib/validation-schemas'
 import { Link } from 'react-router-dom'
-import { useLoginUserMutation } from '@/ApiSlice/UserApi';
+import { useLoginUserMutation } from '@/api/UserApi';
 import { useNavigate } from 'react-router-dom';
 const formSchema = loginFormSchema
 
 export default function Login() {
   const navigate = useNavigate();
-  const [loginUser ] = useLoginUserMutation();
+  const [loginUser] = useLoginUserMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,15 +43,14 @@ export default function Login() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-     const data =  await loginUser({
+      const data = await loginUser({
         email: values.email,
         password: values.password
       }).unwrap();
-    localStorage.setItem('token', data.result.token);
+      localStorage.setItem('token', data.result.token);
       toast.success('Login successful!');
       navigate('/');
-      
-    } catch (error : any) {
+    } catch (error: any) {
       console.error('Form submission error', error)
       toast.error(error?.data?.error || 'Failed to submit the form. Please try again.');
     }
@@ -62,7 +58,6 @@ export default function Login() {
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full min-h-screen px-4">
-      <ToastContainer />
       <Card className="max-w-sm mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>

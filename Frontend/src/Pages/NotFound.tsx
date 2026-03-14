@@ -1,22 +1,27 @@
-import { Link } from "react-router-dom";
 
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
-export default function Component() {
-  return (
-    <div className="flex items-center min-h-screen px-4 py-12 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-      <div className="w-full space-y-6 text-center">
-        <div className="space-y-3">
-          <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">404 Page Not Found</h1>
-          <p className="text-gray-500">Sorry, we couldn&#x27;t find the page you&#x27;re looking for.</p>
+export default function NotFound() {
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-slate-50 px-4">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center"
+            >
+                <h1 className="text-9xl font-extrabold text-[#8B4513] opacity-20">404</h1>
+                <div className="absolute inset-0 flex items-center justify-center flex-col">
+                    <h2 className="text-3xl font-bold text-slate-900 mb-4">Page Not Found</h2>
+                    <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                        Oops! The page you're looking for doesn't exist. It might have been moved or deleted.
+                    </p>
+                    <Button asChild style={{ backgroundColor: '#8B4513' }} className="rounded-full px-8 py-6 text-lg shadow-xl">
+                        <Link to="/">Go Back Home</Link>
+                    </Button>
+                </div>
+            </motion.div>
         </div>
-        <Link
-          to="/"
-          className="inline-flex items-center h-10 px-8 text-sm font-medium transition-colors bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 hover:text-gray-900 dark:border-gray-800 dark:bg-gray-950 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:focus-visible:ring-gray-300"
-         
-        >
-          Return to website
-        </Link>
-      </div>
-    </div>
-  )
+    );
 }

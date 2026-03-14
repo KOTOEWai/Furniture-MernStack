@@ -27,7 +27,6 @@ router.get("/furniture/data", async (req, res) => {
   try {
     const { title: name, product_type } = req.query;
     const data = await getFurnitureData();
-  console.log(data);
     let filtered = data;
 
 

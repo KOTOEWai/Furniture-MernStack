@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
- import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'sonner';
 import {
   Form,
   FormControl,
@@ -24,17 +22,17 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/ui/password-input'
 
-import {useCreateUserMutation } from '@/ApiSlice/UserApi';
+import { useCreateUserMutation } from '@/api/UserApi';
 import { registerFormSchema } from '@/lib/validation-schemas'
 import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@/hooks/redux';
-import { setUser } from '../slice/userSlice'
+import { setUser } from '@/store/slices/userSlice'
 const formSchema = registerFormSchema
 
 export default function Register() {
   const navigate = useNavigate();
-  const [createUser ] = useCreateUserMutation();
+  const [createUser] = useCreateUserMutation();
   const dispatch = useAppDispatch();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,16 +46,16 @@ export default function Register() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-    const data =  await createUser({
+      const data = await createUser({
         username: values.username,
         email: values.email,
         password: values.password
       }).unwrap();
-    dispatch(setUser(data));
-     toast.success('Registration successful! You can now log in.');
-     navigate('/');
-    } catch (error : any) {
-      const Err = error .data?.error || 'Failed to submit the form. Please try again.';
+      dispatch(setUser(data));
+      toast.success('Registration successful! You can now log in.');
+      navigate('/');
+    } catch (error: any) {
+      const Err = error.data?.error || 'Failed to submit the form. Please try again.';
       console.error('Form submission error', error)
       toast.error(Err)
     }
@@ -65,7 +63,6 @@ export default function Register() {
 
   return (
     <div className="flex items-center justify-center w-full h-full min-h-screen px-4">
-      <ToastContainer />
       <Card className="max-w-sm mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl">Register</CardTitle>
@@ -113,7 +110,7 @@ export default function Register() {
                   )}
                 />
 
-              
+
 
                 {/* Password Field */}
                 <FormField

@@ -28,6 +28,7 @@ const postProduct = asyncHandler(async (req, res) => {
   if (!name || !image || !description || !dimensions || !category || !price || !stock) {
     throw new CustomError("All fields are required", 400);
   }
+  
 
   const productExists = await productModel.findOne({ name });
   if (productExists) {

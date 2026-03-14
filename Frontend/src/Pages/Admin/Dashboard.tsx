@@ -1,5 +1,5 @@
 
-import { useGetCurrentUserQuery } from "@/ApiSlice/UserApi";
+import { useGetCurrentUserQuery } from "@/api/UserApi";
 
 const Dashboard = () => {
   const { data, isLoading, error } = useGetCurrentUserQuery();
@@ -13,7 +13,7 @@ const Dashboard = () => {
       <p>Name: {data?.username}</p>
       <p>Email: {data?.email}</p>
       <p>Role: {data?.role}</p>
-     
+
     </div>
   );
 };

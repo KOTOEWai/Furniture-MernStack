@@ -11,7 +11,6 @@ import { NavigationMenuDemo } from "./NavMenu"
 import {
   NavigationMenu,
   NavigationMenuItem,
-
   NavigationMenuList,
 } from "@/components/ui/navigation-menu"
 import {
@@ -20,7 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Link, NavLink } from "react-router-dom"
-
+import { useAppSelector } from "@/hooks/redux"
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
@@ -28,12 +27,11 @@ const navigationLinks = [
   { href: "/product", label: "Product" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
-  { href: "/Login", label: "Login" },
-  { href: "/Register", label: "Register" },
 ]
 
 export default function Component() {
   const id = useId()
+  const { isAuthenticated } = useAppSelector((state) => state.user);
 
   return (
     <header className="sticky top-0 z-50 w-full transition-all duration-300 border-b backdrop-blur-md" style={{ backgroundColor: "#FFF8F0/80", borderColor: "#D2B48C" }}>
@@ -96,6 +94,16 @@ export default function Component() {
                         </NavLink>
                       </NavigationMenuItem>
                     ))}
+                    {!isAuthenticated && (
+                      <>
+                        <NavigationMenuItem className="w-full">
+                          <NavLink to="/Login" className="block w-full px-4 py-3 rounded-md text-sm font-bold text-[#5C4033] hover:bg-[#D2B48C]/20">Login</NavLink>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem className="w-full">
+                          <NavLink to="/Register" className="block w-full px-4 py-3 rounded-md text-sm font-bold text-[#5C4033] hover:bg-[#D2B48C]/20">Register</NavLink>
+                        </NavigationMenuItem>
+                      </>
+                    )}
                   </NavigationMenuList>
                 </NavigationMenu>
               </PopoverContent>
@@ -130,14 +138,16 @@ export default function Component() {
 
           {/* Right: Actions */}
           <div className="flex items-center justify-end flex-shrink-0 gap-3">
-            <div className="hidden lg:flex items-center bg-[#D2B48C]/10 rounded-full p-1 border" style={{ borderColor: "#D2B48C/30" }}>
-              <Link to='/Login' className="px-5 py-1.5 text-sm font-bold transition-all rounded-full hover:bg-[#D2B48C]/20" style={{ color: "#8B4513" }}>Login</Link>
-              <Link to='/Register' className="px-5 py-1.5 text-sm font-bold transition-all rounded-full text-white shadow-sm hover:opacity-90 active:scale-95" style={{ backgroundColor: "#8B4513" }}>Join</Link>
-            </div>
+            {!isAuthenticated && (
+              <div className="hidden lg:flex items-center bg-[#D2B48C]/10 rounded-full p-1 border" style={{ borderColor: "#D2B48C/30" }}>
+                <Link to='/Login' className="px-5 py-1.5 text-sm font-bold transition-all rounded-full hover:bg-[#D2B48C]/20" style={{ color: "#8B4513" }}>Login</Link>
+                <Link to='/Register' className="px-5 py-1.5 text-sm font-bold transition-all rounded-full text-white shadow-sm hover:opacity-90 active:scale-95" style={{ backgroundColor: "#8B4513" }}>Join</Link>
+              </div>
+            )}
 
             <div className="flex items-center gap-1">
               <NotificationMenu />
-              <UserMenu />
+              {isAuthenticated && <UserMenu />}
             </div>
           </div>
         </div>

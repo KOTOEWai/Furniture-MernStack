@@ -1,20 +1,13 @@
 import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom';
-
 import { lazy, Suspense } from 'react';
-
 import { Spinner } from './components/ui/shadcn-io/spinner';
-
-
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-
 import FilterProduct from '@/pages/FilterProducts';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
+import Login from '@/pages/Auth/Login';
+import Register from '@/pages/Auth/Register';
 import NotFound from '@/pages/NotFound';
 import RootLayout from './components/layout/RootLayout';
 const Dashboard = lazy(() => import('@/pages/admin/Dashboard'));
-
-
 const Home = lazy(() => import('@/pages/Home'));
 const About = lazy(() => import('@/pages/About'));
 const Contact = lazy(() => import('@/pages/Contact'));

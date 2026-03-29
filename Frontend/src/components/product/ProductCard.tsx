@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -38,8 +37,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     images,
     color_clean,
     material_clean,
-    product_type,
-    specifications_dict,
   } = product;
 
   const getAvailableImages = () => {
@@ -123,18 +120,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             />
           </AnimatePresence>
 
-          {/* Badges Overlay */}
-          <div className="absolute flex flex-wrap gap-1 top-3 left-3">
-            <Badge className="font-bold shadow-sm bg-primary/90">{product_type || 'General'}</Badge>
-            {specifications_dict?.['Special Feature'] && (
-              <Badge
-                variant="secondary"
-                className="hidden border-none shadow-sm sm:flex bg-background/80 backdrop-blur-md"
-              >
-                {specifications_dict['Special Feature']}
-              </Badge>
-            )}
-          </div>
+        
 
           {/* Action Overlay */}
           <div className="absolute flex flex-col gap-2 transition-all duration-300 translate-x-12 opacity-0 top-3 right-3 group-hover:translate-x-0 group-hover:opacity-100">

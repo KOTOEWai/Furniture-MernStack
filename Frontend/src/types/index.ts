@@ -15,16 +15,13 @@ export interface CustomerReviewCardProps {
   verified?: boolean
 }
 
-export interface ProductApiResponse {
-    success: boolean;
-    count: number;
-    data: Product[];
-}
+
 
 export interface User {
-    username: string;
-    email: string;
-    role: string;
+  id: string;
+  username: string;
+  email: string;
+  role: string;
 }
 
 
@@ -37,7 +34,7 @@ export interface ProductSpecifications {
 export interface Product1 {
   asin: string;
   brand_clean: string;
-  brand:string;
+  brand: string;
   categories_clean: string[];
   color_clean: string;
   country_of_origin: string;
@@ -66,8 +63,6 @@ export interface ProductCardProps {
   product: Product1;
   className?: string;
 }
-
-
 
 export interface Dimensions {
   depth: number
@@ -98,14 +93,20 @@ export interface Product {
   tags: string[] | null
   created_at: string
   updated_at: string
-  
+
 }
 
 export type Products = Product[];
 
 
 export interface ProductApiResponse {
-    success: boolean;
-    count: number;
-    data: Product[];
+  success: boolean;
+  count: number;
+  data: Product[];
+}
+
+export interface ProductApiResponse {
+  success: boolean;
+  count: number;
+  data: Product[];
 }

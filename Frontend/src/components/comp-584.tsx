@@ -2,8 +2,8 @@ import { useId } from "react"
 import { SearchIcon } from "lucide-react"
 
 
-import NotificationMenu from "@/components/notification-menu"
-import UserMenu from "@/components/user-menu"
+import NotificationMenu from "@/components/layout/notification-menu"
+import UserMenu from "@/components/layout/user-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -90,7 +90,7 @@ export default function Component() {
           {/* Logo */}
           <div className="flex items-center">
             <a href="#" className="text-primary hover:text-primary/90">
-            
+
             </a>
           </div>
         </div>

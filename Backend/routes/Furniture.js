@@ -1,15 +1,15 @@
 const express = require("express");
-const { getFurnitureData ,getUniqueById } = require("../utils/furnitureService");
+const { getFurnitureData, getUniqueById, getUniqueCategories, getUniqueColors } = require("../utils/furnitureService");
 
 const router = express.Router();
-const { verifyToken } = require("../utils/Auth");
+
 
 router.get("/furniture", async (req, res, next) => {
   try {
-    const data = await getFurnitureData();
+    const data = await getFurnitureData(req.query);
     res.json(data);
   } catch (err) {
-    next(err); 
+    next(err);
   }
 });
 
@@ -19,15 +19,33 @@ router.get("/furniture/:id", async (req, res, next) => {
     const data = await getUniqueById(id);
     res.json(data);
   } catch (err) {
-    next(err); 
+    next(err);
+  }
+});
+
+router.get("/furniture-categories", async (req, res, next) => {
+  try {
+    const categories = await getUniqueCategories();
+    res.json(categories);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/furniture-colors", async (req, res, next) => {
+  try {
+    const colors = await getUniqueColors();
+    res.json(colors);
+  } catch (err) {
+    next(err);
   }
 });
 
 router.get("/furniture/data", async (req, res) => {
   try {
     const { title: name, product_type } = req.query;
-    const data = await getFurnitureData();
-    let filtered = data;
+    const response = await getFurnitureData();
+    let filtered = response.data;
 
 
     // Search by title
@@ -40,10 +58,11 @@ router.get("/furniture/data", async (req, res) => {
 
     // Search by product_type
     if (product_type) {
-      const search = product_type.toLowerCase().trim();
-      filtered = filtered.filter(f =>
-        f.product_type?.toLowerCase().trim() === search
-      );
+      const searchTypes = String(product_type).split(",").map(t => t.toLowerCase().trim());
+      filtered = filtered.filter(f => {
+        const itemCats = f.categories_clean || [];
+        return itemCats.some(cat => searchTypes.includes(cat.toLowerCase().trim()));
+      });
     }
 
     res.json({

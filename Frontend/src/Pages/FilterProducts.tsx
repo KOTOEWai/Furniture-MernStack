@@ -1,12 +1,11 @@
 
-import {  useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { ProductCard } from "@/components/product/ProductCard";
-import { useGetAllProductsQuery } from "@/api/AmazonApi";
+import { useGetProductsQuery } from "@/api/AmazonApi";
 import Loading from "@/components/shared/Loading";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProductSidebar } from "@/components/product/ProductSidebar";
-import  filtericon from "@/assets/images/filter-icon.webp"
 import {
   Pagination,
   PaginationContent,
@@ -14,52 +13,41 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
- 
 } from "@/components/ui/pagination";
-
-
-
+import filtericon from "@/assets/images/filter-icon.webp";
 
 
 const FilterProduct: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [open,setOpen]= useState(true)
-  const productType = searchParams.get("product_type");
-  let ITEMS_PER_PAGE;
-  if (productType === null || productType === "") {
-    ITEMS_PER_PAGE = 22;
-  } else {
-    ITEMS_PER_PAGE = 10;
-  }
-  // URL ကနေ page နံပါတ်ကို ယူမယ်၊ မရှိရင် 1 လို့ ထားမယ်
-  const currentPage = parseInt(searchParams.get("page") || "1");
-
-  const { data, isLoading, error } = useGetAllProductsQuery();
+  const [open, setOpen] = useState(true);
   const [priceRange, setPriceRange] = useState({ min: 0, max: Infinity });
 
-  // ၁။ Filter လုပ်ခြင်း
- // Filter Logic ထဲမှာ Local State ကို သုံးပြီး စစ်မယ်
-  const filteredProducts = useMemo(() => {
-    return data?.filter((product) => {
-      const isCorrectType = !productType || product.product_type === productType;
-      const price = Number(product.price_clean) || 0;
-      const color = product.color_clean || "";
-      const isInPriceRange = price >= priceRange.min && price <= priceRange.max;
+  // 1. URL search params and local state to create query parameters for the backend
+  const currentPage = parseInt(searchParams.get("page") || "1");
+  const productType = searchParams.get("product_type") || "";
+  const color = searchParams.get("color") || "";
 
-      return isCorrectType && isInPriceRange && color.includes(searchParams.get("color") || "");
-    }) || [];
-  }, [data, productType, priceRange, searchParams]);
+  const queryParams = useMemo(() => {
+    const params: Record<string, any> = {
+      page: currentPage,
+      limit: productType ? 10 : 22, // Adjust limit based on product type
+    };
+    if (productType) params.product_type = productType;
+    if (color) params.color = color;
+    if (priceRange.min > 0) params.minPrice = priceRange.min;
+    if (priceRange.max < Infinity) params.maxPrice = priceRange.max;
+    return params;
+  }, [currentPage, productType, color, priceRange]);
 
-  // ၂။ Pagination အတွက် တွက်ချက်ခြင်း
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  
-  const currentItems = useMemo(() => {
-    const lastIndex = currentPage * ITEMS_PER_PAGE;
-    const firstIndex = lastIndex - ITEMS_PER_PAGE;
-    return filteredProducts.slice(firstIndex, lastIndex);
-  }, [currentPage, ITEMS_PER_PAGE, filteredProducts]);
+  // 2. Fetch data from the backend with the query parameters
+  const { data: response, isLoading, error } = useGetProductsQuery(queryParams);
+    
+  // 3. Get paginated items and total pages from the backend response
+  const currentItems = response?.data || []; // This is already correctly typed as Product[] from your API slice
+  const totalPages = response?.totalPages || 0;
+  const totalItems = response?.totalItems || 0;
 
-  // စာမျက်နှာပြောင်းတဲ့ Function
+  // This function remains the same, it just triggers a refetch by changing URL params
   const handlePageChange = (page: number) => {
     searchParams.set("page", page.toString());
     setSearchParams(searchParams);
@@ -68,6 +56,7 @@ const FilterProduct: React.FC = () => {
 
   if (isLoading) return <Loading />;
   if (error) return <div>Error loading products.</div>;
+  
   return (
     <section className="min-h-screen p-4 bg-gray-50 dark:bg-gray-900 md:p-8">
       <div className="max-w-[1440px] mx-auto">
@@ -90,7 +79,7 @@ const FilterProduct: React.FC = () => {
             {/* Product Grid */}
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               <AnimatePresence mode="wait">
-                {currentItems.map((product) => (
+                {currentItems.map((product) => ( // `product` is automatically and correctly typed here
                   <motion.div 
                     key={product.asin}
                     layout
@@ -153,19 +142,16 @@ const FilterProduct: React.FC = () => {
                   </PaginationContent>
                 </Pagination>
                 <p className="mt-4 text-xs text-center text-muted-foreground">
-                  Showing {currentItems.length} of {filteredProducts.length} Products
+                  Showing {currentItems.length} of {totalItems} Products
                 </p>
               </div>
             )}
             
-            {!filteredProducts.length && (
+            {!isLoading && !currentItems.length && (
               <div className="py-20 text-center">No products found.</div>
             )}
           </div>
         </div>
-        
-
-
       </div>
     </section>
   );

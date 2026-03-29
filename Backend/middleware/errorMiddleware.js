@@ -10,7 +10,7 @@ const errorHandler = (err, req, res, next) => {
             stack: err.stack,
         });
     } else {
-        // Production: Don't leak error details
+
         if (err.isOperational) {
             res.status(err.statusCode).json({
                 status: err.status,

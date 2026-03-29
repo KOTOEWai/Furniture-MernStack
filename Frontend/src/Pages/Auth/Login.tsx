@@ -27,11 +27,16 @@ import { loginFormSchema } from '@/lib/validation-schemas'
 import { Link } from 'react-router-dom'
 import { useLoginUserMutation } from '@/api/UserApi';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useAppDispatch } from '@/hooks/redux';
+import { setUser } from '@/store/slices/userSlice';
 const formSchema = loginFormSchema
 
 export default function Login() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [loginUser] = useLoginUserMutation();
+  const [message, setMessage] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,12 +52,25 @@ export default function Login() {
         email: values.email,
         password: values.password
       }).unwrap();
-      localStorage.setItem('token', data.result.token);
+
+      const { accessToken, ...user } = data.result;
+      dispatch(setUser({ user, accessToken }));
+      localStorage.setItem('wasLoggedIn', 'true');
       toast.success('Login successful!');
       navigate('/');
     } catch (error: any) {
-      console.error('Form submission error', error)
-      toast.error(error?.data?.error || 'Failed to submit the form. Please try again.');
+      if (error.data?.errors && Array.isArray(error.data.errors)) {
+        error.data.errors.forEach((err: any) => {
+          form.setError(err.field as any, {
+            type: 'manual',
+            message: err.message
+          });
+        });
+        setMessage("Please correct the errors highlighed below.");
+      } else {
+        const Err = error.data?.message || 'Failed to submit the form. Please try again.';
+        setMessage(Err);
+      }
     }
   }
 
@@ -60,6 +78,11 @@ export default function Login() {
     <div className="flex flex-col items-center justify-center w-full h-full min-h-screen px-4">
       <Card className="max-w-sm mx-auto">
         <CardHeader>
+          {message && (
+            <div className="p-3 mb-2 text-sm text-white bg-red-500 rounded-md animate-in fade-in zoom-in duration-300">
+              {message}
+            </div>
+          )}
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
             Enter your email and password to login to your account.

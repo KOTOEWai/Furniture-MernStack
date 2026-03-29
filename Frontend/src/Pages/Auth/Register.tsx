@@ -21,19 +21,21 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/ui/password-input'
-
 import { useCreateUserMutation } from '@/api/UserApi';
 import { registerFormSchema } from '@/lib/validation-schemas'
 import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@/hooks/redux';
 import { setUser } from '@/store/slices/userSlice'
+import { useState } from 'react';
 const formSchema = registerFormSchema
 
 export default function Register() {
   const navigate = useNavigate();
   const [createUser] = useCreateUserMutation();
+  const [message, setMessage] = useState("");
   const dispatch = useAppDispatch();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -51,13 +53,29 @@ export default function Register() {
         email: values.email,
         password: values.password
       }).unwrap();
-      dispatch(setUser(data));
-      toast.success('Registration successful! You can now log in.');
+      console.log(data);
+
+      const { accessToken, ...user } = data.result;
+      dispatch(setUser({ user, accessToken }));
+      localStorage.setItem('wasLoggedIn', 'true');
+      toast.success("Registration successful!");
       navigate('/');
     } catch (error: any) {
-      const Err = error.data?.error || 'Failed to submit the form. Please try again.';
-      console.error('Form submission error', error)
-      toast.error(Err)
+      if (error.data?.errors && Array.isArray(error.data.errors)) {
+        // Validation errors (Zod issues)
+        error.data.errors.forEach((err: any) => {
+          // err.field reflects the key name (username, email, etc.)
+          form.setError(err.field as any, {
+            type: 'manual',
+            message: err.message
+          });
+        });
+        setMessage("Please correct the errors highlighed below.");
+      } else {
+        // General errors (e.g. "User already exists")
+        const Err = error.data?.message || 'Failed to submit the form. Please try again.';
+        setMessage(Err);
+      }
     }
   }
 
@@ -65,12 +83,18 @@ export default function Register() {
     <div className="flex items-center justify-center w-full h-full min-h-screen px-4">
       <Card className="max-w-sm mx-auto">
         <CardHeader>
+          {message && (
+            <div className="p-3 mb-2 text-sm text-white duration-300 bg-red-500 rounded-md animate-in fade-in zoom-in">
+              {message}
+            </div>
+          )}
           <CardTitle className="text-2xl">Register</CardTitle>
           <CardDescription>
             Create a new account by filling out the form below.
           </CardDescription>
         </CardHeader>
         <CardContent>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <div className="grid gap-4">

@@ -1,5 +1,7 @@
 const User = require("../models/userModel");
-const {  Msg } = require("../utils/core");
+const { Msg, generateAccessToken } = require("../utils/core");
+const RefreshToken = require("../models/refreshTokenModel");
+const jwt = require("jsonwebtoken");
 
 const asyncHandler = require("../utils/asyncHandler");
 const CustomError = require("../utils/CustomError");
@@ -13,7 +15,10 @@ exports.registerUser = asyncHandler(async (req, res) => {
 
   // Business check (Validation logic moves to Middleware)
   if (await User.findOne({ email })) {
-    throw new CustomError('User already exists', 400);
+    throw new CustomError('Email already exists', 400);
+  }
+  if (await User.findOne({ username })) {
+    throw new CustomError('Username already taken', 400);
   }
 
   const newUser = await User.create({ username, email, password });
@@ -43,9 +48,9 @@ exports.getByUserId = asyncHandler(async (req, res) => {
 });
 
 exports.updateUser = asyncHandler(async (req, res) => {
-  const user = await User.findByIdAndUpdate(req.params.id, req.body, { 
-    new: true, 
-    runValidators: true 
+  const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
   });
   if (!user) throw new CustomError('User not found', 404);
   Msg(res, "User updated successfully", user);
@@ -59,4 +64,45 @@ exports.dropUser = asyncHandler(async (req, res) => {
 
 exports.getme = asyncHandler(async (req, res) => {
   res.status(200).json(req.user);
+});
+
+exports.refreshToken = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) throw new CustomError("No refresh token found", 401);
+
+  const storedToken = await RefreshToken.findOne({ token: refreshToken });
+  if (!storedToken) throw new CustomError("Invalid refresh token", 401);
+
+  if (storedToken.expiresAt < new Date()) {
+    await RefreshToken.deleteOne({ token: refreshToken });
+    throw new CustomError("Refresh token expired", 401);
+  }
+
+  // Verify JWT
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET);
+    const newAccessToken = generateAccessToken(decoded.id);
+
+    res.status(200).json({
+      success: true,
+      accessToken: newAccessToken
+    });
+  } catch (err) {
+    throw new CustomError("Invalid refresh token signature", 401);
+  }
+});
+
+exports.logoutUser = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (refreshToken) {
+    await RefreshToken.deleteOne({ token: refreshToken });
+  }
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: "strict"
+  });
+
+  Msg(res, "Logged out successfully", null);
 });
